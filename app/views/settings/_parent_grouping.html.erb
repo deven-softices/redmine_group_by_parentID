@@ -1,0 +1,12 @@
+<p>
+  <label>
+    <%= check_box_tag 'settings[enabled]', '1', @settings['enabled'] == '1' %>
+    Enable hierarchical default sorting when grouped by Parent task
+  </label>
+</p>
+
+<p>
+  <label>Root issue sort order</label><br>
+  <%= select_tag 'settings[root_sort]',
+      options_for_select([['Ascending', 'asc'], ['Descending', 'desc']], @settings['root_sort']) %>
+</p>
