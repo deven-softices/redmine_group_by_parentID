@@ -24,3 +24,9 @@ require_relative 'lib/parent_grouping/issue_query_patch'
 unless IssueQuery.included_modules.include?(ParentGrouping::IssueQueryPatch)
   IssueQuery.send(:include, ParentGrouping::IssueQueryPatch)
 end
+
+# ------------------------------------------------------------
+# Patch QueriesHelper to customize group label display
+# ------------------------------------------------------------
+# Commented out - using view partial instead to avoid breaking aggregation
+require_relative 'lib/parent_grouping/queries_helper_patch'

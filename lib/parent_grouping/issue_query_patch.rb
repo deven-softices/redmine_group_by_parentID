@@ -1,6 +1,67 @@
 # frozen_string_literal: true
 
 module ParentGrouping
+  # Custom value class for parent_id display
+  # Acts as an integer for aggregation but displays as formatted string
+  class ParentIdValue
+    attr_reader :id
+
+    def initialize(parent_id)
+      @id = parent_id
+      @parent = parent_id.present? ? Issue.find_by(id: parent_id) : nil
+    end
+
+    # For display purposes (to_s)
+    def to_s
+      if @parent
+        "##{@parent.id}: #{@parent.subject}"
+      elsif @id
+        "##{@id}"
+      else
+        ""
+      end
+    end
+
+    # For aggregation and grouping (acts like the integer ID)
+    def to_i
+      @id.to_i
+    end
+
+    # For comparisons
+    def ==(other)
+      case other
+      when ParentIdValue
+        @id == other.id
+      when Integer
+        @id == other
+      else
+        @id.to_s == other.to_s
+      end
+    end
+
+    def hash
+      @id.hash
+    end
+
+    def eql?(other)
+      self == other
+    end
+
+    # Make it behave like the ID for sorting
+    def <=>(other)
+      @id.to_i <=> (other.is_a?(ParentIdValue) ? other.id.to_i : other.to_i)
+    end
+
+    # Return the ID for database queries
+    def present?
+      @id.present?
+    end
+
+    def blank?
+      @id.blank?
+    end
+  end
+
   module IssueQueryPatch
     def self.included(base)
       base.class_eval do
@@ -136,6 +197,26 @@ module ParentGrouping
           end
 
           result
+        end
+
+        # ----------------------------------------------------
+        # 7. Override group_by_column to use custom value class
+        # ----------------------------------------------------
+        alias_method :group_by_column_without_parent_grouping, :group_by_column
+        def group_by_column
+          column = group_by_column_without_parent_grouping
+
+          # Only customize for parent_id grouping
+          if column && column.name == :parent_id
+            original_value_method = column.method(:value)
+
+            column.define_singleton_method(:value) do |object|
+              parent_id = original_value_method.call(object)
+              ParentGrouping::ParentIdValue.new(parent_id)
+            end
+          end
+
+          column
         end
 
       end
