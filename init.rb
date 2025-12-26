@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Redmine::Plugin.register :parent_grouping do
-  name 'Parent Grouping plugin'
+  name 'Redmine Groupby Parent Task'
   author 'Softices'
   description 'Grouping and sorting tasks by parent task'
   version '0.0.1'
