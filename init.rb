@@ -9,7 +9,8 @@ Redmine::Plugin.register :parent_grouping do
   settings(
     default: {
       'enabled'   => '1',
-      'root_sort' => 'desc' # asc | desc
+      'root_sort' => 'desc', # asc | desc
+      'default_grouping' => '0' # 0 = manual, 1 = auto-apply to all projects
     },
     partial: 'settings/parent_grouping'
   )

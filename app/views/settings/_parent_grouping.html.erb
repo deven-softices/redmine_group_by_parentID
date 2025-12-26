@@ -1,12 +1,51 @@
-<p>
-  <label>
-    <%= check_box_tag 'settings[enabled]', '1', @settings['enabled'] == '1' %>
-    Enable hierarchical default sorting when grouped by Parent task
-  </label>
-</p>
+<div class="box tabular">
+  <p>
+    <label>
+      <%= check_box_tag 'settings[enabled]', '1', @settings['enabled'] == '1' %>
+      <%= l(:label_parent_grouping_enabled) %>
+    </label>
+    <br/>
+    <em class="info"><%= l(:text_parent_grouping_enabled_info) %></em>
+  </p>
 
-<p>
-  <label>Root issue sort order</label><br>
-  <%= select_tag 'settings[root_sort]',
-      options_for_select([['Ascending', 'asc'], ['Descending', 'desc']], @settings['root_sort']) %>
-</p>
+  <p>
+    <label>
+      <%= check_box_tag 'settings[default_grouping]', '1', @settings['default_grouping'] == '1' %>
+      <%= l(:label_parent_grouping_default) %>
+    </label>
+    <br/>
+    <em class="info"><%= l(:text_parent_grouping_default_info) %></em>
+  </p>
+
+  <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e0e0e0;"/>
+
+  <p>
+    <label for="settings_root_sort"><%= l(:label_parent_grouping_root_sort) %></label>
+    <%= select_tag 'settings[root_sort]',
+                   options_for_select(
+                     [
+                       [l(:label_sort_desc), 'desc'],
+                       [l(:label_sort_asc), 'asc']
+                     ],
+                     @settings['root_sort']
+                   ),
+                   id: 'settings_root_sort' %>
+    <br/>
+    <em class="info"><%= l(:text_parent_grouping_root_sort_info) %></em>
+  </p>
+
+  <p>
+    <label for="settings_subtask_sort"><%= l(:label_parent_grouping_subtask_sort) %></label>
+    <%= select_tag 'settings[subtask_sort]',
+                   options_for_select(
+                     [
+                       [l(:label_sort_desc), 'desc'],
+                       [l(:label_sort_asc), 'asc']
+                     ],
+                     @settings['subtask_sort']
+                   ),
+                   id: 'settings_subtask_sort' %>
+    <br/>
+    <em class="info"><%= l(:text_parent_grouping_subtask_sort_info) %></em>
+  </p>
+</div>

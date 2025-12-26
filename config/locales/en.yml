@@ -1,3 +1,12 @@
 # English strings go here for Rails i18n
 en:
-  # my_label: "My label"
+  label_parent_grouping_enabled: "Enable hierarchical sorting when grouped by Parent task"
+  text_parent_grouping_enabled_info: "When enabled, allows grouping and sorting by parent task"
+  label_parent_grouping_default: "Apply parent grouping by default to all projects"
+  text_parent_grouping_default_info: "When enabled, all issue lists will automatically group by parent task. Users can still change grouping manually."
+  label_parent_grouping_root_sort: "Parent task sort order"
+  text_parent_grouping_root_sort_info: "Sort order for parent task groups"
+  label_parent_grouping_subtask_sort: "Subtask sort order"
+  text_parent_grouping_subtask_sort_info: "Sort order for subtasks within each parent group"
+  label_sort_asc: "Ascending (oldest first)"
+  label_sort_desc: "Descending (newest first)"
