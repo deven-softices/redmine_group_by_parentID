@@ -14,7 +14,13 @@ module ParentGrouping
     # For display purposes (to_s)
     def to_s
       if @parent
-        "##{@parent.id}: #{@parent.subject}"
+        parent_link = "<a href=\"/issues/#{@parent.id}\" class=\"issue\">##{@parent.id}: #{ERB::Util.html_escape(@parent.subject)}</a>"
+
+        # Create "+" button for adding child task
+        add_button = "<a href=\"/projects/#{@parent.project_id}/issues/new?issue[parent_issue_id]=#{@parent.id}\" class=\"icon icon-add\" title=\"New issue\"><svg class=\"s18 icon-svg\" aria-hidden=\"true\"><use href=\"/assets/icons-64cb2f36.svg#icon--add\"></use></svg></a>"
+
+        (add_button + ' ' + parent_link).html_safe
+        # "##{@parent.id}: #{@parent.subject}"
       elsif @id
         "##{@id}"
       else
@@ -215,6 +221,7 @@ module ParentGrouping
 
         # ----------------------------------------------------
         # 8. Override group_by_column to use custom value class
+        #    and add custom rendering for group headers
         # ----------------------------------------------------
         alias_method :group_by_column_without_parent_grouping, :group_by_column
         def group_by_column
