@@ -1,29 +1,42 @@
 # frozen_string_literal: true
+require 'action_view'
 
 module ParentGrouping
   # Custom value class for parent_id display
   # Acts as an integer for aggregation but displays as formatted string
   class ParentIdValue
+    include ActionView::Helpers::OutputSafetyHelper
     attr_reader :id
 
-    def initialize(parent_id)
+    def initialize(parent_id, issue = nil)
       @id = parent_id
       @parent = parent_id.present? ? Issue.find_by(id: parent_id) : nil
+      @issue = issue
+      @issue_id = issue&.id
     end
 
     # For display purposes (to_s)
     def to_s
       if @parent
-        parent_link = "<a href=\"/issues/#{@parent.id}\" class=\"issue\">##{@parent.id}: #{ERB::Util.html_escape(@parent.subject)}</a>"
-
-        # Create "+" button for adding child task
-        add_button = "<a href=\"/projects/#{@parent.project_id}/issues/new?issue[parent_issue_id]=#{@parent.id}\" class=\"icon icon-add\" title=\"New issue\"><svg class=\"s18 icon-svg\" aria-hidden=\"true\"><use href=\"/assets/icons-64cb2f36.svg#icon--add\"></use></svg></a>"
+	parent_link = "<a href=\"/issues/#{@parent.id}\" class=\"issue\" target=\"_blank\">##{@parent.id}: #{ERB::Util.html_escape(@parent.subject)}</a>"
+	icon_path = ActionController::Base.helpers.asset_path('icons.svg')
+        add_button = <<~HTML
+          <a href="/projects/#{@parent.project_id}/issues/new?issue[parent_issue_id]=#{@parent.id}"
+            class="icon icon-add"
+            title="New issue"
+            target = "_blank">
+            <svg class="s18 icon-svg" aria-hidden="true">
+              <use href="#{icon_path}#icon--add"></use>
+            </svg>
+          </a>
+        HTML
 
         (add_button + ' ' + parent_link).html_safe
-        # "##{@parent.id}: #{@parent.subject}"
       elsif @id
         "##{@id}"
       else
+        # Blank parent_id group - only standalone tasks appear here
+        # Parent tasks (with subtasks) are already shown as group headers
         ""
       end
     end
@@ -55,7 +68,8 @@ module ParentGrouping
 
     # Make it behave like the ID for sorting
     def <=>(other)
-      @id.to_i <=> (other.is_a?(ParentIdValue) ? other.id.to_i : other.to_i)
+      other_value = other.is_a?(ParentIdValue) ? other : ParentIdValue.new(other)
+      @id.to_i <=> other_value.id.to_i
     end
 
     # Return the ID for database queries
@@ -88,7 +102,7 @@ module ParentGrouping
         end
 
         # ----------------------------------------------------
-        # 2. Make "Parent task" available as a column
+        # 2. Make \"Parent task\" available as a column
         # ----------------------------------------------------
         alias_method :available_columns_without_parent_grouping, :available_columns
         def available_columns
@@ -108,7 +122,7 @@ module ParentGrouping
         end
 
         # ----------------------------------------------------
-        # 3. Make "Parent task" groupable
+        # 3. Make \"Parent task\" groupable
         # ----------------------------------------------------
         alias_method :groupable_columns_without_parent_grouping, :groupable_columns
         def groupable_columns
@@ -220,8 +234,26 @@ module ParentGrouping
         end
 
         # ----------------------------------------------------
-        # 8. Override group_by_column to use custom value class
-        #    and add custom rendering for group headers
+        # 8. Override issues to filter out parent tasks from blank group
+        # ----------------------------------------------------
+        alias_method :issues_without_parent_grouping, :issues
+        def issues(options={})
+          issues_list = issues_without_parent_grouping(options)
+
+          # Only filter when grouping by parent_id
+          if group_by.to_s == 'parent_id'
+            # Filter out tasks that have no parent but have children
+            # These are already displayed as group headers
+            issues_list.reject! do |issue|
+              issue.parent_id.nil? && Issue.where(parent_id: issue.id).exists?
+            end
+          end
+
+          issues_list
+        end
+
+        # ----------------------------------------------------
+        # 9. Override group_by_column to use custom value class
         # ----------------------------------------------------
         alias_method :group_by_column_without_parent_grouping, :group_by_column
         def group_by_column
@@ -233,7 +265,7 @@ module ParentGrouping
 
             column.define_singleton_method(:value) do |object|
               parent_id = original_value_method.call(object)
-              ParentGrouping::ParentIdValue.new(parent_id)
+              ParentGrouping::ParentIdValue.new(parent_id, object)
             end
           end
 
